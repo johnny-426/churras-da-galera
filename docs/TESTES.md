@@ -1,6 +1,6 @@
 # Verificações e roteiro de testes
 
-Este documento descreve o que existe para testar e os resultados esperados. **Não registra os cenários abaixo como aprovados.** Nesta revisão documental de 19/10/2026, foram feitas inspeções de código e documentação; o executável .NET não foi executado.
+Este documento apresenta as verificações automatizadas e os cenários de testes manuais do CdG. Em 19/10/2026, a compilação com dotnet build foi concluída com sucesso, e as 21 verificações automatizadas passaram, incluindo 700 combinações de rateio. Os testes utilizam SQLite em memória e não substituem os testes manuais e de concorrência no PostgreSQL, que permanecem pendentes.
 
 ## 1. Verificações automatizadas existentes
 

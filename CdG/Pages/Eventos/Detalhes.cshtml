@@ -1,0 +1,269 @@
+@page "{id:int}"
+@model CdG.Pages.Eventos.DetalhesModel
+
+@{
+    ViewData["Title"] = Model.Evento.Nome;
+}
+
+<h1>@Model.Evento.Nome</h1>
+<p><a asp-page="Financeiro" asp-route-id="@Model.Evento.Id" class="btn btn-outline-success">Despesas e rateio</a></p>
+
+@if (!string.IsNullOrEmpty(Model.Mensagem))
+{
+    <div class="alert alert-info" role="status">
+        @Model.Mensagem
+    </div>
+}
+
+<dl class="row">
+    <dt class="col-sm-3">Descrição</dt>
+    <dd class="col-sm-9" style="white-space: pre-wrap;">@(string.IsNullOrWhiteSpace(Model.Evento.Descricao) ? "Sem descrição." : Model.Evento.Descricao)</dd>
+
+    <dt class="col-sm-3">Data e horário</dt>
+    <dd class="col-sm-9">
+        @Model.DataFormatada
+        @if (Model.Evento.DataHora.HasValue)
+        {
+            <span class="text-muted"> — horário de Brasília</span>
+        }
+    </dd>
+
+    <dt class="col-sm-3">Local</dt>
+    <dd class="col-sm-9">@Model.Evento.Local</dd>
+
+    <dt class="col-sm-3">Situação</dt>
+    <dd class="col-sm-9">
+        @(Model.Evento.Status == CdG.Models.StatusEvento.Concluido
+            ? "Concluído"
+            : Model.Evento.Status.ToString())
+    </dd>
+
+    <dt class="col-sm-3">Limite de participantes</dt>
+    <dd class="col-sm-9">
+        @(Model.Evento.LimiteParticipantes?.ToString() ?? "Sem limite")
+    </dd>
+</dl>
+
+@if (Model.MinhaPresenca.HasValue)
+{
+    <section class="mb-4">
+        <h2>Minha participação</h2>
+
+        <p>
+            <strong>Presença:</strong> @Model.MinhaPresenca
+        </p>
+
+        @if (Model.Evento.Status == CdG.Models.StatusEvento.Agendado &&
+             Model.Evento.DataHora.HasValue &&
+             Model.Evento.DataHora.Value > DateTime.UtcNow)
+        {
+            @if (Model.ConvitePendente)
+            {
+                <p>Você ainda precisa responder ao convite inicial.</p>
+
+                <a asp-page="/Convites/Index"
+                   class="btn btn-primary">
+                    Responder convite
+                </a>
+            }
+            else
+            {
+                <form method="post"
+                      asp-page-handler="Presenca"
+                      asp-route-id="@Model.Evento.Id">
+
+                    <input type="hidden"
+                           name="dataTicks"
+                           value="@Model.Evento.DataHora.Value.Ticks" />
+
+                    @if (Model.MinhaPresenca !=
+                         CdG.Models.StatusPresenca.Confirmada)
+                    {
+                        <button type="submit"
+                                name="acao"
+                                value="confirmar"
+                                class="btn btn-success">
+                            Confirmar minha presença
+                        </button>
+                    }
+
+                    @if (Model.MinhaPresenca ==
+                             CdG.Models.StatusPresenca.Confirmada ||
+                         Model.MinhaPresenca ==
+                             CdG.Models.StatusPresenca.Pendente)
+                    {
+                        <button type="submit"
+                                name="acao"
+                                value="cancelar"
+                                class="btn btn-outline-danger"
+                                onclick="return confirm('Cancelar sua presença? Você continuará vinculado ao evento.');">
+                            Cancelar minha presença
+                        </button>
+                    }
+                </form>
+            }
+        }
+        else if (Model.Evento.Status == CdG.Models.StatusEvento.Adiado)
+        {
+            <p>Aguarde a definição da nova data para responder.</p>
+        }
+        else
+        {
+            <p>As alterações de presença estão encerradas para este evento.</p>
+        }
+    </section>
+}
+
+@if (Model.Evento.Status == CdG.Models.StatusEvento.Agendado ||
+     Model.Evento.Status == CdG.Models.StatusEvento.Adiado)
+{
+    <section class="border rounded p-3 mb-4">
+        <h2 class="h5">Sair do evento</h2>
+        <p>Você perderá o acesso e liberará sua vaga. Nesta versão, não é possível voltar ao mesmo evento.
+           Se você for o último organizador, assumirá a pessoa elegível com o aceite registrado mais antigo.
+           Sem sucessor, sua saída será bloqueada.</p>
+        <form method="post" asp-page-handler="Sair" asp-route-id="@Model.Evento.Id"
+              onsubmit="return confirm('Sair definitivamente deste evento? Você perderá o acesso. Se necessário, a organização será transferida automaticamente.');">
+            <button type="submit" class="btn btn-outline-danger">Sair do evento</button>
+        </form>
+    </section>
+}
+
+@if (Model.EhOrganizador)
+{
+    @if (Model.Evento.Status == CdG.Models.StatusEvento.Agendado &&
+         Model.Evento.DataHora.HasValue &&
+         Model.Evento.DataHora.Value > DateTime.UtcNow)
+    {
+        <p>
+            <a asp-page="/Eventos/Convidar"
+               asp-route-id="@Model.Evento.Id"
+               class="btn btn-primary">
+                Convidar participante
+            </a>
+        </p>
+    }
+
+    <h2>Participantes</h2>
+
+    <p>
+        <strong>Confirmados:</strong> @Model.TotalConfirmados
+        <span class="mx-2">|</span>
+        <strong>Pendentes:</strong> @Model.TotalPendentes
+    </p>
+
+    @if (Model.Participantes.Count == 0)
+    {
+        <p>Nenhum participante vinculado.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Participante</th>
+                        <th>Papel</th>
+                        <th>Presença</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var participante in Model.Participantes)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">
+                                    @(string.IsNullOrWhiteSpace(participante.Usuario.Nome)
+                                        ? "Nome não informado"
+                                        : participante.Usuario.Nome)
+                                </div>
+
+                                <div class="small text-muted">
+                                    @participante.Usuario.Email
+                                </div>
+                            </td>
+                            <td>@participante.Papel</td>
+                            <td>@participante.StatusPresenca</td>
+                            <td>
+                                @if ((Model.Evento.Status == CdG.Models.StatusEvento.Agendado ||
+                                      Model.Evento.Status == CdG.Models.StatusEvento.Adiado) &&
+                                     Model.UsuariosElegiveisParaPromocao.Contains(
+                                         participante.UsuarioId))
+                                {
+                                    <form method="post"
+                                          asp-page-handler="Promover"
+                                          asp-route-id="@Model.Evento.Id"
+                                          onsubmit="return confirm('Promover este participante a organizador? Ele terá os mesmos poderes que você: editar, reagendar, cancelar o evento e promover outros participantes.');">
+
+                                        <input type="hidden"
+                                               name="vinculoId"
+                                               value="@participante.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-outline-warning btn-sm">
+                                            Tornar organizador
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (Model.Evento.Status == CdG.Models.StatusEvento.Agendado ||
+         Model.Evento.Status == CdG.Models.StatusEvento.Adiado)
+    {
+        <p>
+            <a asp-page="/Eventos/Editar"
+               asp-route-id="@Model.Evento.Id"
+               class="btn btn-primary">
+                Editar evento
+            </a>
+
+            <a asp-page="/Eventos/Adiar"
+               asp-route-id="@Model.Evento.Id"
+               class="btn btn-outline-primary">
+                Adiar ou reagendar
+            </a>
+        </p>
+
+        <form method="post"
+              asp-page-handler="Cancelar"
+              asp-route-id="@Model.Evento.Id"
+              class="mb-3"
+              onsubmit="return confirm('Cancelar este evento? Ele continuará disponível no histórico.');">
+            <button type="submit" class="btn btn-danger">
+                Cancelar evento
+            </button>
+        </form>
+    }
+
+    @if (Model.Evento.Status == CdG.Models.StatusEvento.Agendado &&
+         Model.Evento.DataHora.HasValue &&
+         Model.Evento.DataHora.Value <= DateTime.UtcNow)
+    {
+        <form method="post"
+              asp-page-handler="Concluir"
+              asp-route-id="@Model.Evento.Id"
+              class="mb-3"
+              onsubmit="return confirm('Concluir este evento? Ele ficará disponível apenas para consulta.');">
+            <button type="submit" class="btn btn-success">
+                Concluir evento
+            </button>
+        </form>
+    }
+
+    <a asp-page="/Eventos/Index" class="btn btn-secondary">
+        Voltar para meus eventos
+    </a>
+}
+else
+{
+    <a asp-page="/Eventos/Index" class="btn btn-secondary">
+        Voltar para meus eventos
+    </a>
+}

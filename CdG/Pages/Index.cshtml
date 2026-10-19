@@ -1,0 +1,139 @@
+﻿@page
+@model CdG.Pages.IndexModel
+
+@{
+    ViewData["Title"] = "Início";
+}
+
+@if (!Model.EstaConectado)
+{
+    <section class="py-4">
+        <h1>Churras da Galera</h1>
+
+        <p class="lead">
+            Organize seus eventos, convide participantes
+            e acompanhe as confirmações de presença.
+        </p>
+
+        <div class="d-flex gap-2">
+            <a asp-area="Identity"
+               asp-page="/Account/Register"
+               class="btn btn-primary">
+                Criar minha conta
+            </a>
+
+            <a asp-area="Identity"
+               asp-page="/Account/Login"
+               class="btn btn-outline-primary">
+                Entrar
+            </a>
+        </div>
+    </section>
+}
+else
+{
+    <h1>
+        @(string.IsNullOrWhiteSpace(Model.NomeExibido)
+            ? "Bem-vindo ao CdG!"
+            : $"Olá, {Model.NomeExibido}!")
+    </h1>
+
+    <p class="text-muted">
+        Acompanhe seus próximos encontros e suas pendências.
+    </p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <section class="card h-100">
+                <div class="card-body">
+                    <h2 class="h5">Próximos eventos confirmados</h2>
+
+                    <p class="fs-2 fw-bold">
+                        @Model.TotalProximosEventos
+                    </p>
+
+                    <a asp-page="/Eventos/Index">
+                        Ver meus eventos
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-4">
+            <section class="card h-100">
+                <div class="card-body">
+                    <h2 class="h5">Convites para responder</h2>
+
+                    <p class="fs-2 fw-bold">
+                        @Model.ConvitesParaResponder
+                    </p>
+
+                    <a asp-page="/Convites/Index">
+                        Ver meus convites
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-4">
+            <section class="card h-100">
+                <div class="card-body">
+                    <h2 class="h5">Notificações não lidas</h2>
+
+                    <p class="fs-2 fw-bold">
+                        @Model.NotificacoesNaoLidas
+                    </p>
+
+                    <a asp-page="/Notificacoes/Index"
+                       asp-route-SomenteNaoLidas="true">
+                        Ver não lidas
+                    </a>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between
+        align-items-center gap-2 mb-3">
+        <h2 class="h4 mb-0">Seus próximos encontros</h2>
+
+        <a asp-page="/Eventos/Criar" class="btn btn-primary">
+            Criar evento
+        </a>
+    </div>
+
+    <p class="text-muted">
+        Até cinco eventos com sua presença confirmada,
+        do mais próximo ao mais distante.
+        Horários de Brasília.
+    </p>
+
+    @if (Model.ProximosEventos.Count == 0)
+    {
+        <div class="alert alert-info">
+            Você ainda não tem presença confirmada em eventos futuros.
+            Confira seus convites ou crie um evento.
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var evento in Model.ProximosEventos)
+            {
+                <a asp-page="/Eventos/Detalhes"
+                   asp-route-id="@evento.Id"
+                   class="list-group-item list-group-item-action">
+                    <h3 class="h5 mb-1">@evento.Nome</h3>
+
+                    <p class="mb-1">
+                        @Model.FormatarData(evento.DataHora)
+                    </p>
+
+                    <p class="mb-0 text-muted">
+                        @evento.Local
+                    </p>
+                </a>
+            }
+        </div>
+    }
+}

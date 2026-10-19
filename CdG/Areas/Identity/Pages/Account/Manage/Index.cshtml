@@ -1,0 +1,64 @@
+﻿@page
+@model CdG.Areas.Identity.Pages.Account.Manage.IndexModel
+
+@{
+    ViewData["Title"] = "Meu perfil";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+}
+
+<h3>@ViewData["Title"]</h3>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-success" role="alert">
+        @Model.StatusMessage
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger"
+                 role="alert"></div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">E-mail</label>
+                <input id="email"
+                       type="email"
+                       class="form-control"
+                       value="@Model.Email"
+                       disabled />
+                <div class="form-text">
+                    Este é o e-mail usado para entrar na sua conta.
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Nome"
+                       class="form-control"
+                       autocomplete="name"
+                       placeholder="Seu nome"
+                       maxlength="100"
+                       aria-required="true" />
+                <label asp-for="Input.Nome"></label>
+                <span asp-validation-for="Input.Nome"
+                      class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Salvar alterações
+            </button>
+
+            <a asp-area=""
+               asp-page="/Eventos/Index"
+               class="btn btn-outline-secondary">
+                Meus eventos
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

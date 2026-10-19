@@ -1,0 +1,51 @@
+﻿@page "{id:int}"
+@model CdG.Pages.Eventos.ConvidarModel
+
+@{
+    ViewData["Title"] = "Convidar participante";
+}
+
+<h1>Convidar participante</h1>
+
+<p>Evento: <strong>@Model.NomeEvento</strong></p>
+
+<p>
+    Informe o e-mail de uma pessoa que já tenha conta no CdG.
+    O convite será registrado dentro do sistema.
+</p>
+
+@if (!string.IsNullOrEmpty(Model.Mensagem))
+{
+    <div class="alert alert-success" role="status">
+        @Model.Mensagem
+    </div>
+}
+
+<form method="post" asp-route-id="@Model.EventoId">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">
+            E-mail do participante
+        </label>
+
+        <input asp-for="Email"
+               type="email"
+               class="form-control"
+               autocomplete="off" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Enviar convite
+    </button>
+
+    <a asp-page="/Eventos/Detalhes"
+       asp-route-id="@Model.EventoId"
+       class="btn btn-secondary">
+        Voltar ao evento
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

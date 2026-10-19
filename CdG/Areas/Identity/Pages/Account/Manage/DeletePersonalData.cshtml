@@ -1,0 +1,31 @@
+﻿@page
+@model CdG.Areas.Identity.Pages.Account.Manage.DeletePersonalDataModel
+@{
+    ViewData["Title"] = "Excluir conta";
+}
+<h3>@ViewData["Title"]</h3>
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>
+@if (Model.PossuiHistorico)
+{
+    <div class="alert alert-info">
+        Sua conta possui eventos, participações, convites ou notificações.
+        A exclusão de contas com histórico ainda não está disponível nesta versão.
+        Ocultar eventos não apaga esses registros.
+    </div>
+}
+else
+{
+    <p class="text-danger">Excluir a conta é permanente. Você perderá o acesso.</p>
+    <form method="post" onsubmit="return confirm('Excluir sua conta permanentemente?');">
+        @if (Model.RequirePassword)
+        {
+            <div class="mb-3">
+                <label asp-for="Input.Password" class="form-label">Confirme sua senha</label>
+                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+        }
+        <button type="submit" class="btn btn-danger">Excluir minha conta</button>
+    </form>
+}
+<a asp-page="./Index" class="btn btn-outline-secondary mt-3">Voltar</a>

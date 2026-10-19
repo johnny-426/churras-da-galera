@@ -1,0 +1,152 @@
+﻿@page
+@model CdG.Pages.Convites.IndexModel
+@using CdG.Models
+
+@{
+    ViewData["Title"] = "Meus convites";
+
+    var agora = DateTime.UtcNow;
+
+    var fuso = TimeZoneInfo.FindSystemTimeZoneById(
+        "E. South America Standard Time");
+}
+
+<h1>Meus convites</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.Mensagem))
+{
+    <div class="alert alert-info" role="status">
+        @Model.Mensagem
+    </div>
+}
+
+<p>
+    <a asp-page="/Eventos/Index" class="btn btn-outline-primary">
+        Meus eventos
+    </a>
+</p>
+
+@if (Model.Convites.Count == 0)
+{
+    <div class="alert alert-info">
+        Você ainda não recebeu convites.
+    </div>
+}
+else
+{
+    <p class="text-muted">
+        Datas e horários no horário de Brasília.
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Evento</th>
+                    <th scope="col">Data e horário</th>
+                    <th scope="col">Situação do evento</th>
+                    <th scope="col">Convite</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var convite in Model.Convites)
+                {
+                    var evento = convite.Evento;
+
+                    var podeResponder =
+                        convite.Status == StatusConvite.Enviado &&
+                        evento.Status == StatusEvento.Agendado &&
+                        evento.DataHora.HasValue &&
+                        evento.DataHora.Value > agora;
+
+                    <tr>
+                        <td>
+                            <a asp-page="/Eventos/Detalhes"
+                               asp-route-id="@evento.Id">
+                                @evento.Nome
+                            </a>
+                        </td>
+
+                        <td>
+                            @if (evento.DataHora.HasValue)
+                            {
+                                @TimeZoneInfo.ConvertTimeFromUtc(
+                                    evento.DataHora.Value,
+                                    fuso).ToString("dd/MM/yyyy HH:mm")
+                            }
+                            else
+                            {
+                                <span>Data a definir</span>
+                            }
+                        </td>
+
+                        <td>
+                            @(evento.Status == StatusEvento.Concluido
+                                ? "Concluído"
+                                : evento.Status.ToString())
+                        </td>
+
+                        <td>
+                            @(convite.Status == StatusConvite.Enviado
+                                ? "Aguardando resposta"
+                                : convite.Status.ToString())
+                        </td>
+
+                        <td>
+                            @if (podeResponder)
+                            {
+                                <form method="post"
+                                      asp-page-handler="Responder"
+                                      class="d-flex gap-2">
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@convite.Id" />
+
+                                    <input type="hidden"
+                                           name="dataTicks"
+                                           value="@evento.DataHora!.Value.Ticks" />
+
+                                    <button type="submit"
+                                            name="resposta"
+                                            value="aceitar"
+                                            class="btn btn-success btn-sm">
+                                        Aceitar
+                                    </button>
+
+                                    <button type="submit"
+                                            name="resposta"
+                                            value="recusar"
+                                            class="btn btn-outline-danger btn-sm">
+                                        Recusar
+                                    </button>
+                                </form>
+                            }
+                            else if (convite.Status != StatusConvite.Enviado)
+                            {
+                                <span class="text-muted">
+                                    Convite já respondido.
+                                    Consulte sua presença nos detalhes do evento.
+                                </span>
+                            }
+                            else if (evento.Status == StatusEvento.Adiado)
+                            {
+                                <span class="text-muted">
+                                    Aguarde a definição de uma nova data.
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">
+                                    Este evento não está disponível para resposta.
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

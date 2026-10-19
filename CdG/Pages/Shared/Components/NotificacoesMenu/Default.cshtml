@@ -1,0 +1,17 @@
+﻿@model int
+
+<a class="nav-link text-dark"
+   asp-area=""
+   asp-page="/Notificacoes/Index">
+    Notificações
+
+    @if (Model > 0)
+    {
+        <span class="badge rounded-pill bg-danger">
+            @(Model > 99 ? "99+" : Model.ToString())
+            <span class="visually-hidden">
+                notificações não lidas
+            </span>
+        </span>
+    }
+</a>

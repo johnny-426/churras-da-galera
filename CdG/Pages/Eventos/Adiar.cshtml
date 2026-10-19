@@ -1,0 +1,46 @@
+﻿@page "{id:int}"
+@model CdG.Pages.Eventos.AdiarModel
+
+@{
+    ViewData["Title"] = "Adiar ou reagendar";
+}
+
+<h1>Adiar ou reagendar</h1>
+
+<p>Evento: <strong>@Model.NomeEvento</strong></p>
+
+<p>
+    Informe uma nova data ou deixe o campo vazio
+    para adiar sem definir outra data.
+</p>
+
+<form method="post" asp-route-id="@Model.EventoId">
+    <input type="hidden" asp-for="VersaoOriginal" />
+    <p><a asp-page="Adiar" asp-route-id="@Model.EventoId">Recarregar os dados atuais</a> (descarta alterações não salvas)</p>
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="NovaData" class="form-label">
+            Nova data e horário de Brasília (opcional)
+        </label>
+
+        <input asp-for="NovaData"
+               type="datetime-local"
+               class="form-control" />
+
+        <div class="form-text">
+            Ao salvar com o campo vazio, a data anterior será
+            removida e o evento ficará como “Adiado”.
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Salvar alteração
+    </button>
+
+    <a asp-page="/Eventos/Detalhes"
+       asp-route-id="@Model.EventoId"
+       class="btn btn-secondary">
+        Voltar sem alterar
+    </a>
+</form>

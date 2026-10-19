@@ -1,0 +1,69 @@
+﻿@page
+@model CdG.Pages.Eventos.CriarModel
+
+@{
+    ViewData["Title"] = "Criar evento";
+}
+
+<h1>Criar evento</h1>
+
+@if (!string.IsNullOrEmpty(Model.Mensagem))
+{
+    <div class="alert alert-success" role="status">
+        @Model.Mensagem
+    </div>
+}
+
+<form method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Entrada.Nome" class="form-label">
+            Nome do evento
+        </label>
+        <input asp-for="Entrada.Nome" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Entrada.Descricao" class="form-label">
+            Descrição (opcional)
+        </label>
+        <textarea asp-for="Entrada.Descricao"
+                  class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Entrada.DataHora" class="form-label">
+            Data e horário de Brasília
+        </label>
+        <input asp-for="Entrada.DataHora"
+               type="datetime-local" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Entrada.Local" class="form-label">
+            Local
+        </label>
+        <input asp-for="Entrada.Local" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Entrada.LimiteParticipantes" class="form-label">
+            Limite de participantes (opcional)
+        </label>
+        <input asp-for="Entrada.LimiteParticipantes"
+               type="number" min="1" class="form-control" />
+        <div class="form-text">
+            Deixe vazio para não definir um limite.
+            O organizador conta como participante.
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Criar evento
+    </button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

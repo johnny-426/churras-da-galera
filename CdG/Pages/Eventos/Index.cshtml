@@ -1,0 +1,131 @@
+﻿@page
+@model CdG.Pages.Eventos.IndexModel
+
+@{
+    ViewData["Title"] = "Meus eventos";
+}
+
+<h1>@(Model.Ocultos ? "Eventos ocultos" : "Meus eventos")</h1>
+<p><a asp-page="Index" asp-route-Ocultos="@(!Model.Ocultos)">@(Model.Ocultos ? "Voltar para meus eventos" : "Ver eventos ocultos")</a></p>
+<form method="get" class="row g-2 mb-3">
+    <input type="hidden" name="Ocultos" value="@(Model.Ocultos ? "true" : "false")" />
+    <div class="col-sm-6">
+        <label asp-for="Busca" class="form-label">Nome do evento</label>
+        <input asp-for="Busca" class="form-control" />
+    </div>
+    <div class="col-sm-4">
+        <label asp-for="Situacao" class="form-label">Situação</label>
+        <select asp-for="Situacao" class="form-select">
+            <option value="">Todas</option>
+            <option value="@CdG.Models.StatusEvento.Agendado">Agendado</option>
+            <option value="@CdG.Models.StatusEvento.Adiado">Adiado</option>
+            <option value="@CdG.Models.StatusEvento.Cancelado">Cancelado</option>
+            <option value="@CdG.Models.StatusEvento.Concluido">Concluído</option>
+        </select>
+    </div>
+    <div class="col-sm-2 d-flex align-items-end"><button class="btn btn-primary" type="submit">Filtrar</button></div>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.Mensagem))
+{
+    <div class="alert alert-info" role="status">
+        @Model.Mensagem
+    </div>
+}
+
+<p>
+    <a asp-page="/Eventos/Criar" class="btn btn-primary">
+        Criar evento
+    </a>
+
+    <a asp-page="/Convites/Index" class="btn btn-outline-primary">
+        Meus convites
+    </a>
+</p>
+
+@if (Model.Participacoes.Count == 0)
+{
+    <p>
+        Nenhum evento encontrado nesta lista com os filtros escolhidos.
+    </p>
+}
+else
+{
+    <p class="text-muted">Horários de Brasília.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Evento</th>
+                    <th>Data</th>
+                    <th>Local</th>
+                    <th>Situação do evento</th>
+                    <th>Meu papel</th>
+                    <th>Minha presença</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var participacao in Model.Participacoes)
+                {
+                    <tr>
+                        <td>
+                            @if (participacao.SaiuEm == null && !Model.Ocultos)
+                            {
+                            <a asp-page="/Eventos/Detalhes"
+                               asp-route-id="@participacao.EventoId">
+                                @participacao.Evento.Nome
+                            </a>
+                            }
+                            else
+                            {
+                                @participacao.Evento.Nome
+                            }
+                        </td>
+
+                        <td>
+                            @Model.FormatarData(
+                                participacao.Evento.DataHora)
+                        </td>
+
+                        <td>@participacao.Evento.Local</td>
+
+                        <td>
+                            @(participacao.Evento.Status ==
+                                CdG.Models.StatusEvento.Concluido
+                                ? "Concluído"
+                                : participacao.Evento.Status.ToString())
+                        </td>
+
+                        <td>@(participacao.SaiuEm.HasValue ? "Participação encerrada" : participacao.Papel.ToString())</td>
+
+                        <td>@(participacao.SaiuEm.HasValue ? "Saiu do evento" : participacao.StatusPresenca.ToString())</td>
+                        <td>
+                            @if (Model.Ocultos)
+                            {
+                                <form method="post" asp-page-handler="Restaurar" asp-route-id="@participacao.EventoId">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Restaurar</button>
+                                </form>
+                            }
+                            else if (participacao.Evento.Status == CdG.Models.StatusEvento.Cancelado ||
+                                     participacao.Evento.Status == CdG.Models.StatusEvento.Concluido)
+                            {
+                                <form method="post" asp-page-handler="Ocultar" asp-route-id="@participacao.EventoId"
+                                      onsubmit="return confirm('Ocultar somente do seu histórico? O evento continuará disponível para as outras pessoas.');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                                            title="Ocultar do meu histórico" aria-label="Ocultar do meu histórico">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
+                                        </svg>
+                                        <span class="visually-hidden">Ocultar do meu histórico</span>
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

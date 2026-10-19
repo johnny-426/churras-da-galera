@@ -1,0 +1,184 @@
+﻿@page
+@model CdG.Pages.Notificacoes.IndexModel
+
+@{
+    ViewData["Title"] = "Notificações";
+}
+
+<h1>Notificações</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.MensagemStatus))
+{
+    <div class="alert alert-success" role="status">
+        @Model.MensagemStatus
+    </div>
+}
+
+<p>
+    <strong>Não lidas:</strong> @Model.TotalNaoLidas
+</p>
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a asp-page="/Notificacoes/Index"
+       class="btn @(Model.SomenteNaoLidas ? "btn-outline-primary" : "btn-primary")">
+        Todas
+    </a>
+
+    <a asp-page="/Notificacoes/Index"
+       asp-route-SomenteNaoLidas="true"
+       class="btn @(Model.SomenteNaoLidas ? "btn-primary" : "btn-outline-primary")">
+        Não lidas
+    </a>
+
+    @if (Model.TotalNaoLidas > 0)
+    {
+        <form method="post" asp-page-handler="MarcarTodas">
+            <input type="hidden"
+                   name="SomenteNaoLidas"
+                   value="@(Model.SomenteNaoLidas ? "true" : "false")" />
+
+            <button type="submit" class="btn btn-outline-success">
+                Marcar todas como lidas
+            </button>
+        </form>
+    }
+</div>
+
+@if (Model.Notificacoes.Count == 0)
+{
+    <div class="alert alert-info">
+        @(Model.SomenteNaoLidas
+            ? "Você não possui notificações não lidas."
+            : "Você ainda não possui notificações.")
+    </div>
+}
+else
+{
+    @foreach (var notificacao in Model.Notificacoes)
+    {
+        <article class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between gap-2 mb-2">
+                    <small class="text-muted">
+                        @Model.FormatarData(notificacao.CriadaEm)
+                        — Brasília
+                    </small>
+
+                    @if (notificacao.LidaEm == null)
+                    {
+                        <span class="badge bg-primary">Não lida</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Lida</span>
+                    }
+                </div>
+
+                <p class="card-text">@notificacao.Mensagem</p>
+
+                <div class="d-flex flex-wrap gap-2">
+                    @if (Model.EventosAcessiveis.Contains(notificacao.EventoId))
+                    {
+                    <a asp-page="/Eventos/Detalhes"
+                       asp-route-id="@notificacao.EventoId"
+                       class="btn btn-outline-primary btn-sm">
+                        Ver evento
+                    </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted small">Evento fora da sua lista.</span>
+                    }
+
+                    @if (notificacao.Tipo ==
+                         CdG.Models.TipoNotificacao.ConviteRecebido)
+                    {
+                        <a asp-page="/Convites/Index"
+                           class="btn btn-outline-primary btn-sm">
+                            Meus convites
+                        </a>
+                    }
+
+                    @if (notificacao.LidaEm == null)
+                    {
+                        <form method="post"
+                              asp-page-handler="MarcarLida">
+                            <input type="hidden"
+                                   name="Pagina"
+                                   value="@Model.Pagina" />
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@notificacao.Id" />
+
+                            <input type="hidden"
+                                   name="SomenteNaoLidas"
+                                   value="@(Model.SomenteNaoLidas ? "true" : "false")" />
+
+                            <button type="submit"
+                                    class="btn btn-outline-success btn-sm">
+                                Marcar como lida
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </article>
+    }
+    @if (Model.TotalResultados > 0)
+    {
+        <p class="text-muted">
+            Página @Model.Pagina de @Model.TotalPaginas
+            — @Model.TotalResultados notificação(ões) neste filtro.
+        </p>
+    }
+
+    @if (Model.TotalPaginas > 1)
+    {
+        <nav aria-label="Páginas de notificações">
+            <ul class="pagination">
+                <li class="page-item @(Model.Pagina == 1 ? "disabled" : "")">
+                    @if (Model.Pagina > 1)
+                    {
+                        <a class="page-link"
+                           asp-page="/Notificacoes/Index"
+                           asp-route-Pagina="@(Model.Pagina - 1)"
+                           asp-route-SomenteNaoLidas="@Model.SomenteNaoLidas">
+                            Anterior
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="page-link" aria-disabled="true">
+                            Anterior
+                        </span>
+                    }
+                </li>
+
+                <li class="page-item active">
+                    <span class="page-link" aria-current="page">
+                        @Model.Pagina
+                    </span>
+                </li>
+
+                <li class="page-item @(Model.Pagina == Model.TotalPaginas ? "disabled" : "")">
+                    @if (Model.Pagina < Model.TotalPaginas)
+                    {
+                        <a class="page-link"
+                           asp-page="/Notificacoes/Index"
+                           asp-route-Pagina="@(Model.Pagina + 1)"
+                           asp-route-SomenteNaoLidas="@Model.SomenteNaoLidas">
+                            Próxima
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="page-link" aria-disabled="true">
+                            Próxima
+                        </span>
+                    }
+                </li>
+            </ul>
+        </nav>
+    }
+}
